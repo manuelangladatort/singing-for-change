@@ -63,8 +63,8 @@ video_ratings_select_long = video_ratings_select %>%
 table(video_ratings_select_long$rating)
 
 
-# select rating sacle
-rating_scale = "preference" # or valence
+# select rating scale
+rating_scale = "preference" # preference or valence
 
 video_ratings_sum = video_ratings_select_long %>% 
   filter(rating == rating_scale) %>% 
@@ -75,9 +75,10 @@ video_ratings_sum = video_ratings_select_long %>%
     sd = sd(ratings),
     lower_ci = mean - qnorm(0.975) * (sd / sqrt(n)),
     upper_ci = mean + qnorm(0.975) * (sd / sqrt(n))
-  ) 
+  ) %>% 
+  arrange(desc(mean))
 
-length(table(video_ratings_sum$vid)) # 65 videos only?
+length(table(video_ratings_sum$vid)) # 80
 
 video_ratings_sum %>% 
   ggplot(aes(x = reorder(vid, -mean), y = mean, fill = conditions)) +
@@ -85,39 +86,29 @@ video_ratings_sum %>%
   geom_errorbar(aes(ymin = lower_ci, ymax = upper_ci), width = 0.25, position = position_dodge(width = 0.8)) +
   labs(
        x = "Video ID",
-       y = "Preference Rating") +
+       y = paste(rating_scale, "rating")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-ggsave("plot_videos.png", height = 8, width = 20, units = "cm",
-       bg = "white")
-
+as_vector(video_ratings_sum$vid)
 
 ################################################################################
 # Analysis: finding similar videos to select for the experiment
 ################################################################################
 # Based on the plot, try to find videos in each condition that are the same
 manually_selected_videos = c(
-  "vid61", "vid58", "vid28",
-  "vid33", "vid62", "vid55", "vid56", "vid48",
-  "vid50", "vid64", 
-  "vid39", "vid57", "vid54", "vid63", "vid78",
-  "vid40", "vid31",
-  "vid49", "vid1", "vid24", "vid15", "vid60", "vid66", 
-  "vid14", "vid45", "vid11", "vid65", "vid5", "vid46", 
-  "vid51", "vid37", "vid41", "vid74",
-  "vid80", "vid8", "vid29",
-  "vid6", "vid10", "vid3", "vid71", "vid23"
-  )
+  "vid35", "vid61","vid37","vid58","vid28",
+  "vid26","vid33","vid62","vid55","vid56",
+  "vid19","vid50","vid64","vid15",
+  "vid44","vid39","vid2","vid57","vid54",
+  "vid63","vid78","vid40","vid59","vid31",
+  "vid49","vid1","vid24","vid60","vid67",
+  "vid14","vid41","vid21","vid73","vid74",
+  "vid45","vid11","vid65","vid5","vid46",
+  "vid34","vid51","vid69","vid8","vid29",
+  "vid80","vid10", "vid48", 
+  "vid66","vid3")
 length(manually_selected_videos)
-
-manually_selected_videos = c(
-  "vid41", "vid45", "vid49", "vid1",
-  "vid10", "vid5", "vid65", "vid58", 
-  "vid74", "vid24", "vid29", "vid40" 
-)
-length(manually_selected_videos)
-
 
 video_selection = video_ratings_sum %>% 
   filter(vid %in% manually_selected_videos)
@@ -127,7 +118,7 @@ length(out)
 out
 
 video_ratings_sum$selected <- video_ratings_sum$vid %in% out
-video_ratings_sum %>% write.csv("video_ids_selected.csv")
+video_ratings_sum %>% write.csv("video_preference_ids_selected.csv")
 
 video_ratings_sum %>%
   ggplot(aes(x = reorder(vid, -mean), y = mean, fill = conditions, color = factor(selected))) +
@@ -136,12 +127,13 @@ video_ratings_sum %>%
   scale_color_manual(values = c("FALSE" = "black", "TRUE" = "red"), guide = FALSE) +  # Customize colors
   labs(
     x = "Video ID",
-    y = "Preference Rating"
+    y = "Valence Rating"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-ggsave("plot_video_selection.png", height = 8, width = 20, units = "cm",
+
+ggsave("plot_preference_video_selection.png", height = 8, width = 20, units = "cm",
        bg = "white")
 
 
